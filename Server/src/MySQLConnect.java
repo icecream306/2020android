@@ -116,6 +116,8 @@ public class MySQLConnect {
             {
                 i++;
             }
+            if(i==0)
+                return bill;
             rs.beforeFirst();
             bill=new billinfo[i];
             int j=0;
@@ -138,6 +140,7 @@ public class MySQLConnect {
         return bill;
     }
 
+    //按时间段查找账单
     public billinfo[] SelectBill(int userid,String startTime,String endTime)
     {
         billinfo[] bill=null;
@@ -192,7 +195,7 @@ public class MySQLConnect {
     }
 
     //用户注册
-    public void regist(int id,String password)
+    public boolean regist(int id,String password)
     {
         try {
             PreparedStatement pps=cn.prepareStatement("insert into userinfo (id,password) values (?,?)");
@@ -203,11 +206,12 @@ public class MySQLConnect {
 
         catch (SQLException throwables) {
             throwables.printStackTrace();
+            return false;
         }
-
+        return true;
     }
     //添加账单信息
-    public void addBill(billinfo bi)
+    public boolean addBill(billinfo bi)
     {
         try {
             PreparedStatement pps=cn.prepareStatement("insert into billinfo (userid,time,type,money) values (?,?,?,?)");
@@ -220,12 +224,13 @@ public class MySQLConnect {
 
         catch (SQLException throwables) {
             throwables.printStackTrace();
+            return false;
         }
-
+    return true;
     }
 
     //删除相应的账单
-    public void deleteBill(billinfo bill)
+    public boolean deleteBill(billinfo bill)
     {
         billinfo bi=SelectBill(bill);
         try {
@@ -238,10 +243,12 @@ public class MySQLConnect {
             pps.executeUpdate();
         } catch (SQLException throwables) {
             throwables.printStackTrace();
+            return false;
         }
+        return true;
     }
 
-    public void deleteUser(int id,String password)
+    public boolean deleteUser(int id,String password)
     {
         //账户密码都正确才能销户
         if(User(id,password))
@@ -251,13 +258,20 @@ public class MySQLConnect {
                 pps.setInt(1,id);
                 pps.setString(2,password);
                 pps.executeUpdate();
+
+                pps=cn.prepareStatement("delete from billinfo where userid=?");
+                pps.setInt(1,id);
+                pps.executeUpdate();
             } catch (SQLException throwables) {
                 throwables.printStackTrace();
+                return false;
             }
+            return true;
         }
+        return false;
     }
 
-    public void changePassword(int id,String prePassword,String newPassword)
+    public boolean changePassword(int id,String prePassword,String newPassword)
     {
         if(User(id,prePassword))
         {
@@ -268,13 +282,15 @@ public class MySQLConnect {
                 pps.executeUpdate();
             } catch (SQLException throwables) {
                 throwables.printStackTrace();
+                return false;
             }
-
+            return true;
         }
+        return false;
     }
 
     //修改账单
-    public void changeBill(billinfo bi)
+    public boolean changeBill(billinfo bi,billinfo bc)
     {
         try {
             //先去找到相应的记录获取id
@@ -282,17 +298,18 @@ public class MySQLConnect {
 
             //修改
             PreparedStatement pps=cn.prepareStatement("update billinfo set userid=?,time=?,type=?,money=? where id=?");
-            pps.setInt(1,bi.userid);
-            pps.setString(2,bi.time);
-            pps.setString(3,bi.type);
-            pps.setInt(4,bi.money);
+            pps.setInt(1,bc.userid);
+            pps.setString(2,bc.time);
+            pps.setString(3,bc.type);
+            pps.setInt(4,bc.money);
             pps.setInt(5,bq.id);
             pps.executeUpdate();
         } catch (SQLException throwables) {
             throwables.printStackTrace();
+            return false;
         }
+        return true;
     }
-
     //测试用例
 //    public static void main(String[] args)
 //    {
